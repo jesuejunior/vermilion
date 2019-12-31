@@ -11,16 +11,15 @@ class Settings(BaseSettings):
 
         REDIS_HOST: str = "localhost"
         REDIS_PORT: int = 6379
-        REDIS_DATABASE: int = 0
-        REDIS_URL: str = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DATABASE}"
     """
 
     DEBUG: bool = True
 
+    BUCKET: str = "datalake"
+    CRAWLER_ROLE: str = "arn:aws:iam::904893311111:role/service-role/AWSGlueServiceRole-Crawler"
+
     class Config:
-        env_prefix = (
-            os.getenv("NAMESPACE", "DEV").upper() + "_"
-        )  # defaults to 'APP_'
+        env_prefix = os.getenv("NAMESPACE", "DEV").upper() + "_"  # defaults to 'APP_'
 
 
 settings = Settings()
