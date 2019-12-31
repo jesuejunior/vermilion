@@ -1,0 +1,55 @@
+service: vermilion 
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+
+bucket:
+  output: abc
+  deployment: xyz
+
+provider:
+  name: aws
+  runtime: python3.8
+  stage: dev
+  region: us-east-1
+  deploymentBucket: ${self:bucket.deployment}
+	iamRoleStatements:
+    - Effect: Allow
+      Action:
+         - s3:PutObject
+         - s3:PutObjectAcl
+      Resource: "arn:aws:s3:::${self:bucket.output}/*"
+    - Effect: Allow
+      Action:
+         - s3:GetObject
+         - s3:GetObjectAcl
+      Resource: "arn:aws:s3:::${self:bucket.deployment}/*"
+	vpc:
+      securityGroupIds:
+        - sg-00e571fe3
+      subnetIds:
+        - subnet-03bbfe9
+        - subnet-0f79559
+
+package:
+ include:
+   - lake/**
+ exclude:
+   - .git/**
+
+functions:
+  crawler:
+    handler: handlers.crawler
+    description: This is responsable for read S3 path then create crawlers and tables to be used by Athena
+    memorySize: 128
+    events:
+      - schedule: rate(24 hours)
+    environment:
+      CRAWLER_ROLE: ${self:}
+      BUCKET: ${self:}
+
+resources:
+  Resources:
+    S3BucketOutputs:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:bucket.output}
