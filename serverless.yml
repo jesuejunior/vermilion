@@ -2,27 +2,23 @@ service: vermilion
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
 
-bucket:
-  output: abc
-  deployment: xyz
+custom:
+  deploymentBucket: ${env:DEPLOYMENT_BUCKET}
+  crawlerRole: "arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/service-role/AWSGlueServiceRole-Crawler"
+  bucket: ${env:BUCKET}
 
 provider:
   name: aws
-  runtime: python3.8
+  runtime: python3.7
   stage: dev
   region: us-east-1
-  deploymentBucket: ${self:bucket.deployment}
+  deploymentBucket: ${self:custom.deploymentBucket}
 	iamRoleStatements:
-    - Effect: Allow
-      Action:
-         - s3:PutObject
-         - s3:PutObjectAcl
-      Resource: "arn:aws:s3:::${self:bucket.output}/*"
     - Effect: Allow
       Action:
          - s3:GetObject
          - s3:GetObjectAcl
-      Resource: "arn:aws:s3:::${self:bucket.deployment}/*"
+      Resource: "arn:aws:s3:::${self:custom.deploymentBucket}/*"
 	vpc:
       securityGroupIds:
         - sg-00e571fe3
@@ -44,12 +40,15 @@ functions:
     events:
       - schedule: rate(24 hours)
     environment:
-      CRAWLER_ROLE: ${self:}
-      BUCKET: ${self:}
+      CRAWLER_ROLE: ${self:custom.crawlerRole}
+      BUCKET: ${self:custom.bucket}
 
-resources:
-  Resources:
-    S3BucketOutputs:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: ${self:bucket.output}
+# resources:
+#   Resources:
+#     S3BucketOutputs:
+#       Type: AWS::S3::Bucket
+#       Properties:
+#         BucketName: ${self:bucket.output}
+
+plugins:
+  - serverless-python-requirements

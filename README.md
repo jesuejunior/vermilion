@@ -81,3 +81,12 @@ Caso não definimos nenhum namespace, o prefixo será `DEV`, ou seja
 ```
 
 `lembrando que dentro da sua aplicação o que vale é justamente o nome que foi definido no arquivo config.py, sem o prefixo`
+
+
+
+
+### Requirements
+
+```shell
+    sls plugin install -n serverless-python-requirements
+```
