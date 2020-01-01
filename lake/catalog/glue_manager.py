@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import Dict
 import boto3
-from config import settings
+from lake.config import settings
 
 glue = boto3.client("glue")
 s3 = boto3.client("s3")
@@ -26,7 +26,7 @@ def _check_db_exists(name):
 
 def _create_database(name):
     if not _check_db_exists(name):
-        print("Creating database: ", name)
+        print(f"Creating database: {name}")
         response = glue.create_database(
             DatabaseInput={
                 "Name": name,
@@ -34,7 +34,7 @@ def _create_database(name):
                 "LocationUri": f"S3://{settings.BUCKET}/{name}",
             }
         )
-        print("Database created: ", response)
+        print(f"Database created: {response}")
     return True
 
 
@@ -63,13 +63,13 @@ def _create_crawler(db, table_name):
     if not _check_crawler_exists(name):
         response = glue.create_crawler(
             Name=name,
-            Role=setting.CRAWLER_ROLE,
+            Role=settings.CRAWLER_ROLE,
             DatabaseName=db,
             Targets={"S3Targets": [{"Path": f"s3://{settings.BUCKET}/{db}/{table_name}"}]},
-            Schedule="cron(0 21 * * ? *)",
+            Schedule="cron(0 8 * * ? *)",
             SchemaChangePolicy={"UpdateBehavior": "UPDATE_IN_DATABASE", "DeleteBehavior": "DEPRECATE_IN_DATABASE"},
         )
-    print("Starting {}".format(name))
+    print(f"Starting {name}")
     _start_crawler(name)
     return True
 
@@ -100,5 +100,3 @@ def main():
             _create_crawler(db, table_name)
 
 
-if __name__ == "__main__":
-    main()
