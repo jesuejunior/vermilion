@@ -6,6 +6,9 @@ custom:
   deploymentBucket: ${env:DEPLOYMENT_BUCKET}
   crawlerRole: "arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/service-role/AWSGlueServiceRole-Crawler"
   bucket: ${env:BUCKET}
+  vpc: ${env:VPC}
+  securityGroups: ${env:SECURITY_GROUPS}
+  subnets: ${env:SUBNETS}
 
 provider:
   name: aws
@@ -20,11 +23,11 @@ provider:
          - s3:GetObjectAcl
       Resource: "arn:aws:s3:::${self:custom.deploymentBucket}/*"
 	vpc:
-      securityGroupIds:
-        - sg-00e571fe3
-      subnetIds:
-        - subnet-03bbfe9
-        - subnet-0f79559
+      securityGroupIds: ["${self:custom.securityGroups}"]
+        # - sg-00e571fe3
+      subnetIds: ["${self:custom.subnets}"]
+        # - subnet-03bbfe9
+        # - subnet-0f79559
 
 package:
  include:
@@ -38,7 +41,7 @@ functions:
     description: This is responsable for read S3 path then create crawlers and tables to be used by Athena
     memorySize: 128
     events:
-      - schedule: rate(24 hours)
+      - schedule: rate(12 hours)
     environment:
       CRAWLER_ROLE: ${self:custom.crawlerRole}
       BUCKET: ${self:custom.bucket}
