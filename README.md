@@ -1,23 +1,18 @@
-# Python Boilerplate
+# Vermilion Lake
 
-A ideia desse projeto é já ser um "start" para seu projeto python. O que temos aqui são configurações pré prontas para que você possa se dedicar inteiramente ao código do seu projeto.
+This project is a data lake handler, the intention is to halp to create and mantain a data lake
+
+### Requirements
+
+- [serverless](https://serverless.com/framework/docs/getting-started/)
+- python 3.7+
+- [pipenv](https://pipenv-fork.readthedocs.io/en/latest/)
 
 
-## Pipfile
-
-O Pipfile já tráz algumas dependencias de desenvolvimento, como:
-
-```
-asynctest = "==0.12.1"
-pytest = "==4.0.1"
-pytest-cov = "==2.6.0"
-codecov = "==1.0.0"
-mypy = "==0.630"
-black = "==18.9b0"
-isort = "==4.3.15"
+```shell
+    sls plugin install -n serverless-python-requirements
 ```
 
-Trás também script já pronto para checagem do código:
 
 ### Pytest
 
@@ -52,6 +47,7 @@ Uma configuração do circleci já está pronta em `.circleci/config.yml`. Pode 
 
 # Pydantic - Configuração baseada em variáveis de ambiente
 
+
 Para facilitar na criação de um novo serviço e seguindo as boas práticas definidas no [12factors](https://12factor.net/config) sobre configurações.
 Adicionamos o uso no pydantic para criar e validar essas informações para nós.
 
@@ -84,9 +80,3 @@ Caso não definimos nenhum namespace, o prefixo será `DEV`, ou seja
 
 
 
-
-### Requirements
-
-```shell
-    sls plugin install -n serverless-python-requirements
-```
