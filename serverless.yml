@@ -3,12 +3,14 @@ service: vermilion
 # Check out our docs for more details
 
 custom:
+  namespace: ${opt:stage}
   deploymentBucket: ${env:DEPLOYMENT_BUCKET}
-  crawlerRole: "arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/service-role/AWSGlueServiceRole-Crawler"
+  crawlerRole: ${env:CRAWLER_ROLE, "arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/AWSGlueServiceRole-Crawler"}
+  awsAccountId: ${env:AWS_ACCOUNT_ID}
   bucket: ${env:BUCKET}
-  vpc: ${env:VPC}
-  securityGroups: ${env:SECURITY_GROUPS}
-  subnets: ${env:SUBNETS}
+	# vpc: ${env:VPC}
+  # securityGroups: ${env:SECURITY_GROUPS}
+  # subnets: ${env:SUBNETS}
 
 provider:
   name: aws
@@ -20,14 +22,18 @@ provider:
     - Effect: Allow
       Action:
          - s3:GetObject
+         - s3:ListBucket
+         - s3:ListObjects
          - s3:GetObjectAcl
-      Resource: "arn:aws:s3:::${self:custom.deploymentBucket}/*"
-	vpc:
-      securityGroupIds: ["${self:custom.securityGroups}"]
-        # - sg-00e571fe3
-      subnetIds: ["${self:custom.subnets}"]
-        # - subnet-03bbfe9
-        # - subnet-0f79559
+      Resource: "arn:aws:s3:::${self:custom.Bucket}/*"
+    - Effect: Allow
+      Action:
+         - glue:CreateCrawler
+         - glue:StartCrawler
+         - glue:CreateDatabase
+         - glue:GetDatabases
+         - glue:CreateTable
+      Resource: "arn:aws:glue:::crawler/*"
 
 package:
  include:
@@ -43,15 +49,29 @@ functions:
     events:
       - schedule: rate(12 hours)
     environment:
-      CRAWLER_ROLE: ${self:custom.crawlerRole}
-      BUCKET: ${self:custom.bucket}
+      APP_NAMESPACE: ${self:custom.namespace}
+      APP_CRAWLER_ROLE: ${self:custom.crawlerRole}
+      APP_BUCKET: ${self:custom.bucket}
 
 # resources:
 #   Resources:
+# 		AWSGlueServiceRole-Crawler:
+#       Type: AWS::IAM::Role
+#       Properties:
+#         Path: /my/default/path/
+#         #RoleName: MyDefaultRole # required if you want to use 'serverless deploy --function' later on
+#         AssumeRolePolicyDocument:
+#           Version: '2012-10-17'
+#           Statement:
+#             - Effect: Allow
+#               Principal:
+#                 Service:
+#                   - glue.amazonaws.com
+#               Action: sts:AssumeRole
 #     S3BucketOutputs:
 #       Type: AWS::S3::Bucket
 #       Properties:
-#         BucketName: ${self:bucket.output}
+#         BucketName: "${self:custom.deploymentBucket}"
 
 plugins:
   - serverless-python-requirements
