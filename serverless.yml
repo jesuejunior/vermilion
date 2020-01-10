@@ -8,10 +8,10 @@ custom:
   crawlerRole: ${env:CRAWLER_ROLE, "arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/AWSGlueServiceRole-Crawler"}
   awsAccountId: ${env:AWS_ACCOUNT_ID}
   bucket: ${env:BUCKET}
+  region: ${env:REGION, 'us-east-1'}
 	# vpc: ${env:VPC}
   # securityGroups: ${env:SECURITY_GROUPS}
   # subnets: ${env:SUBNETS}
-
 provider:
   name: aws
   runtime: python3.7
@@ -50,6 +50,7 @@ package:
 functions:
   crawler:
     handler: handlers.crawler
+    # role: VermilionLambdaIAMRole
     description: This is responsable for read S3 path then create crawlers and tables to be used by Athena
     memorySize: 128
     events:
@@ -58,6 +59,36 @@ functions:
       APP_NAMESPACE: ${self:custom.namespace}
       APP_CRAWLER_ROLE: ${self:custom.crawlerRole}
       APP_BUCKET: ${self:custom.bucket}
+
+resources:
+  Resources:
+    VermilionLambdaIAMRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: VermilionLambdaIAMRole
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Action:
+                - "sts:AssumeRole"
+              Effect: "Allow"
+              Principal:
+                Service:
+                  - "lambda.amazonaws.com"
+        Policies:
+          - PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Action:
+                    - "logs:CreateLogGroup"
+                    - "logs:CreateLogStream"
+                    - "logs:PutLogEvents"
+                  Effect: "Allow"
+                  Resource:
+                    - !Sub "arn:aws:logs:${self:custom.region}:${self:custom.awsAccountId}:log-group:/aws/lambda/*:*"
+        PolicyName: "vermilionLambdaPolicy"
+
+
 
 # resources:
 #   Resources:
