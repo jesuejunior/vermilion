@@ -30,11 +30,17 @@ provider:
       Action:
          - glue:CreateCrawler
          - glue:StartCrawler
+      Resource: "arn:aws:glue:::crawler/*"
+
+    - Effect: Allow
+      Action:
          - glue:CreateDatabase
          - glue:GetDatabases
          - glue:CreateTable
-      Resource: "arn:aws:glue:::crawler/*"
-
+      Resource:
+         - "arn:aws:glue:::table/*/*"
+         - "arn:aws:glue:::database/*"
+         - "arn:aws:glue:::catalog" 
 package:
  include:
    - lake/**
