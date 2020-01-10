@@ -14,12 +14,12 @@ class Settings(BaseSettings):
     """
 
     DEBUG: bool = True
-
+    NAMESPACE: str = "dev"
     BUCKET: str = "datalake"
-    CRAWLER_ROLE: str = "arn:aws:iam::904893311111:role/service-role/AWSGlueServiceRole-Crawler"
+    CRAWLER_ROLE: str = "arn:aws:iam::904893311111:role/AWSGlueServiceRole-Crawler"
 
-    class Config:
-        env_prefix = os.getenv("NAMESPACE", "DEV").upper() + "_"  # defaults to 'APP_'
+    # class Config:
+    #     env_prefix = os.getenv("NAMESPACE", "DEV").upper() + "_"  # defaults to 'APP_'
 
 
 settings = Settings()
