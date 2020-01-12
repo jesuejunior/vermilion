@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Dict, List
+from typing import Dict, List, Set
 
 import boto3
 
@@ -13,7 +13,7 @@ class GlueManager:
     pass
 
 
-DATABASES = set()
+DATABASES: Set = set()
 
 
 def _check_db_exists(name):
