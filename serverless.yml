@@ -8,39 +8,39 @@ custom:
   crawlerRole: ${env:CRAWLER_ROLE, "arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/AWSGlueServiceRole-Crawler"}
   awsAccountId: ${env:AWS_ACCOUNT_ID}
   bucket: ${env:BUCKET}
+  profile: ${opt:profile, 'default'}
   region: ${env:REGION, 'us-east-1'}
-	# vpc: ${env:VPC}
-  # securityGroups: ${env:SECURITY_GROUPS}
-  # subnets: ${env:SUBNETS}
 provider:
   name: aws
   runtime: python3.7
   stage: dev
-  region: us-east-1
+  timeout: 60 # optional, in seconds, default is 6
+  profile: ${self:custom.profile}
+  region: ${self:custom.region}
   deploymentBucket: ${self:custom.deploymentBucket}
-	iamRoleStatements:
-    - Effect: Allow
-      Action:
-         - s3:GetObject
-         - s3:ListBucket
-         - s3:ListObjects
-         - s3:GetObjectAcl
-      Resource: "arn:aws:s3:::${self:custom.Bucket}/*"
-    - Effect: Allow
-      Action:
-         - glue:CreateCrawler
-         - glue:StartCrawler
-      Resource: "arn:aws:glue:::crawler/*"
-
-    - Effect: Allow
-      Action:
-         - glue:CreateDatabase
-         - glue:GetDatabases
-         - glue:CreateTable
-      Resource:
-         - "arn:aws:glue:::table/*/*"
-         - "arn:aws:glue:::database/*"
-         - "arn:aws:glue:::catalog" 
+  # iamRoleStatements:
+  #   - Effect: Allow
+  #     Action:
+  #        - s3:GetObject
+  #        - s3:ListBucket
+  #        - s3:ListObjects
+  #        - s3:GetObjectAcl
+  #     Resource: "arn:aws:s3:::${self:custom.bucket}/*"
+  #   - Effect: Allow
+  #     Action:
+  #        - glue:CreateCrawler
+  #        - glue:StartCrawler
+  #     Resource: "arn:aws:glue:::crawler/*"
+  #
+  #   - Effect: Allow
+  #     Action:
+  #        - glue:CreateDatabase
+  #        - glue:GetDatabases
+  #        - glue:CreateTable
+  #     Resource:
+  #        - "arn:aws:glue:::table/*/*"
+  #        - "arn:aws:glue:::database/*"
+  #        - "arn:aws:glue:::catalog" 
 package:
  include:
    - lake/**
@@ -50,65 +50,15 @@ package:
 functions:
   crawler:
     handler: handlers.crawler
-    # role: VermilionLambdaIAMRole
     description: This is responsable for read S3 path then create crawlers and tables to be used by Athena
     memorySize: 128
+    role: ${self:custom.crawlerRole}
     events:
       - schedule: rate(12 hours)
     environment:
       APP_NAMESPACE: ${self:custom.namespace}
       APP_CRAWLER_ROLE: ${self:custom.crawlerRole}
       APP_BUCKET: ${self:custom.bucket}
-
-resources:
-  Resources:
-    VermilionLambdaIAMRole:
-      Type: AWS::IAM::Role
-      Properties:
-        RoleName: VermilionLambdaIAMRole
-        AssumeRolePolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Action:
-                - "sts:AssumeRole"
-              Effect: "Allow"
-              Principal:
-                Service:
-                  - "lambda.amazonaws.com"
-        Policies:
-          - PolicyDocument:
-              Version: "2012-10-17"
-              Statement:
-                - Action:
-                    - "logs:CreateLogGroup"
-                    - "logs:CreateLogStream"
-                    - "logs:PutLogEvents"
-                  Effect: "Allow"
-                  Resource:
-                    - !Sub "arn:aws:logs:${self:custom.region}:${self:custom.awsAccountId}:log-group:/aws/lambda/*:*"
-        PolicyName: "vermilionLambdaPolicy"
-
-
-
-# resources:
-#   Resources:
-# 		AWSGlueServiceRole-Crawler:
-#       Type: AWS::IAM::Role
-#       Properties:
-#         Path: /my/default/path/
-#         #RoleName: MyDefaultRole # required if you want to use 'serverless deploy --function' later on
-#         AssumeRolePolicyDocument:
-#           Version: '2012-10-17'
-#           Statement:
-#             - Effect: Allow
-#               Principal:
-#                 Service:
-#                   - glue.amazonaws.com
-#               Action: sts:AssumeRole
-#     S3BucketOutputs:
-#       Type: AWS::S3::Bucket
-#       Properties:
-#         BucketName: "${self:custom.deploymentBucket}"
 
 plugins:
   - serverless-python-requirements
