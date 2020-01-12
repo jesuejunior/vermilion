@@ -54,7 +54,7 @@ functions:
     memorySize: 128
     role: ${self:custom.crawlerRole}
     events:
-      - schedule: rate(12 hours)
+      - schedule: rate(2 hours)
     environment:
       APP_NAMESPACE: ${self:custom.namespace}
       APP_CRAWLER_ROLE: ${self:custom.crawlerRole}
