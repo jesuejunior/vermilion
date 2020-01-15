@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Union
 
 import boto3
 
@@ -61,16 +61,21 @@ def _create_crawler(db: str, tables: List) -> bool:
     """
         Role "arn:aws:iam::12345678998876:role/service-role/AWSGlueServiceRole-Crawler",
     """
-    name = f"{db}_crawler_{settings.NAMESPACE}"
+    name: str = f"{db}_crawler_{settings.NAMESPACE}"
+    data = {
+        "Name": name,
+        "Role": settings.CRAWLER_ROLE,
+        "DatabaseName": db,
+        "Targets": {"S3Targets": [{"Path": f"s3://{settings.BUCKET}/{db}/{table_name}"} for table_name in tables]},
+        "Schedule": "cron(0 8 * * ? *)",
+        "SchemaChangePolicy": {"UpdateBehavior": "UPDATE_IN_DATABASE", "DeleteBehavior": "DEPRECATE_IN_DATABASE"},
+    }
     if not _check_crawler_exists(name):
-        response = glue.create_crawler(
-            Name=name,
-            Role=settings.CRAWLER_ROLE,
-            DatabaseName=db,
-            Targets={"S3Targets": [{"Path": f"s3://{settings.BUCKET}/{db}/{table_name}"} for table_name in tables]},
-            Schedule="cron(0 8 * * ? *)",
-            SchemaChangePolicy={"UpdateBehavior": "UPDATE_IN_DATABASE", "DeleteBehavior": "DEPRECATE_IN_DATABASE"},
-        )
+        print(f"Creating: {name} crawler")
+        response = glue.create_crawler(**data)
+    else:
+        print(f"Updating {name} crawler")
+        response = glue.update_crawler(**data)
     print(f"Starting {name}")
     _start_crawler(name)
     return True
